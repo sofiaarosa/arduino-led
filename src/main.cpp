@@ -1,10 +1,8 @@
 /*
 author: Sofia Azevedo Rosa
 file:main.cpp
-
 description: main file of LedEffects project. 
 (07/07/2021) In beginning, it only calls the effects functions from the effects files
-
 */
 #include <Arduino.h>
 #include<FastLED.h>
@@ -26,6 +24,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  DrawCommet();
+  DrawTwinkle();
   FastLED.show(); 
 }
