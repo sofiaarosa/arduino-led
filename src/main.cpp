@@ -27,7 +27,8 @@ void setup() {
 }
 
 void loop() {
-  drawBuilting(0,0,50);
+  drawStrips(CRGB(5,5,5),CRGB(5,0,0));
+  // fill_solid(leds,NUM_LEDS,CRGB(0,0,255));
   FastLED.show();
 }
 

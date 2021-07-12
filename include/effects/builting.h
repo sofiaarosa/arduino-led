@@ -3,10 +3,10 @@
 
 void drawBuilting(int r, int g, int b)
 {
-    // FastLED.setBrightness(10);
+    FastLED.setBrightness(10);
     static int sum = 0, sub = -1;
 
-    const int denominator = 6;
+    const int denominator = 15;
     const int fraction = NUM_LEDS / denominator;
     const int halfFraction = NUM_LEDS / (2 * denominator);
 
