@@ -4,73 +4,68 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-void drawCommets(int r, int g, int b)
+void drawCommets(CRGB color)
 {
-    static int cPosition = 0;
     static const int cInitialSize = 30;
-    static int cSize = cInitialSize - 3;
-
-    int menor = 1;
-    if (r != 0)
-        menor = r;
-    else if (g != 0)
-        menor = g;
-    else if (b != 0)
-        menor = b;
-
-    if (r < menor && r != 0)
-        menor = r;
-    if (g < menor && g != 0)
-        menor = g;
-    if (b < menor && b != 0)
-        menor = b;
-
-    int sr = 0;
-    int sg = 0;
-    int sb = 0;
-
-    if (menor == 1)
+    for (int k = 0; k < cInitialSize; k++)
     {
-        sr = r;
-        sg = g;
-        sb = b;
-        r *= 5;
-        g *= 5;
-        b *= 5;      
-    }
-    else
-    {
-        if (r != 0)
-            sr = r / menor;
-        if (g != 0)
-            sg = g / menor;
-        if (b != 0)
-            sb = b / menor;
-    }
-
-    fill_solid(leds, NUM_LEDS, CRGB(sr, sg, sb));
-
-    for (int i = 0; i < NUM_LEDS - cInitialSize; i += cInitialSize)
-    {
-        cSize = cInitialSize - 3;
-        for (int j = 1; j <= cSize; j++)
+        for (int i = 0; i < NUM_LEDS; i += cInitialSize)
         {
-            if (cPosition + j + i == NUM_LEDS-3)
-            {
-                cPosition=0;
-                break;
-            }
-            else
-            {
-                if (sr * j <= r && sg * j <= g && sb * j <= b)
-                    leds[cPosition + j + i] = CRGB(sr * j, sg * j, sb * j);
-                else
-                    leds[cPosition + j + i] = CRGB(sr, sg, sb);
-            }
+            leds[k + i] = color;
         }
+        fadeToBlackBy(leds, NUM_LEDS, 30);
+        FastLED.show();
+        delay(10);
     }
+}
+void drawCommets()
+{
+    static const int cInitialSize = 30;
+    static int count = 0;
+    for (int k = 0; k < cInitialSize; k++)
+    {
+        for (int i = 0; i < NUM_LEDS; i += cInitialSize)
+        {
+            if (count % 2 == 0)
+                leds[k + i] = CRGB(100, 0, 0);
+            else
+                leds[k + i] = CRGB(0, 0, 100);
+            count++;
+        }
+        fadeToBlackBy(leds, NUM_LEDS, 30);
+        FastLED.show();
+        delay(10);
+    }
+}
 
-    FastLED.show();
-    cPosition++;
-    delay(10);
+void drawWaveCommets(CRGB color)
+{
+    for (int i = 0; i > -1; i += 1000)
+    {
+        uint16_t p = map(beat16(15, i), 0, 65535, 0, NUM_LEDS - 1);
+        leds[p] = color;
+        fadeToBlackBy(leds, NUM_LEDS, 30);
+        FastLED.show();
+        if (Serial.available() > 0)
+            break;
+    }
+}
+
+void drawMirroredCommets(CRGB color)
+{
+    static const int cInitialSize = 30;
+    for (int k = 0; k < cInitialSize; k++)
+    {
+        for (int i = 0; i < (NUM_LEDS / 2); i += cInitialSize)
+        {
+            leds[k + i] = color;
+        }
+        for (int i = 0; i < (NUM_LEDS / 2); i += cInitialSize)
+        {
+            leds[NUM_LEDS - (k + i)] = color;
+        }
+        fadeToBlackBy(leds, NUM_LEDS, 50);
+        FastLED.show();
+        delay(10);
+    }
 }

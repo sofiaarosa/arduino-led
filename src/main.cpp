@@ -6,77 +6,138 @@ description: main file of LedEffects project.
 */
 
 #include <Arduino.h>
-#include<FastLED.h>
+#include <FastLED.h>
 
-#define DATA_PIN 7
+#define DATA_PIN 13
 #define NUM_LEDS 300
 
 CRGB leds[NUM_LEDS];
+String message;
 
-#include "effects.h"
+#include "drawEffect.h"
 
-//////////////////////////////////////////// some effects functions that aren't in header files
-void BouncingBalls(byte, byte, byte, int);
-
-void setup() {
-  pinMode(DATA_PIN,OUTPUT);
+void setup()
+{
+  pinMode(DATA_PIN, OUTPUT);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.clear();
+  FastLED.setBrightness(100);
+  fill_solid(leds,NUM_LEDS,CRGB(100,100,100));
   FastLED.show();
   Serial.begin(9600);
+  Serial.println("SETUP");
 }
 
-void loop() {
-  drawStrips(CRGB(5,5,5),CRGB(5,0,0));
-  // fill_solid(leds,NUM_LEDS,CRGB(0,0,255));
-  FastLED.show();
-}
+void loop()
+{
+  if(Serial.available()>0){
+    char reading=Serial.read();
+    Serial.print("\nReading: "); Serial.print(reading,DEC);
+    
+    if(reading!=59){
+      //59 = ;
+      message+=reading;
+      Serial.print("\n Message:"); Serial.print(message);
+    }
 
-//bouncing effect -> it sucks right now, i will make it look better soon 
-//(https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/#LEDStripEffectBouncingBalls)
-void BouncingBalls(byte red, byte green, byte blue, int BallCount) {
-  float Gravity = -9.81;
-  int StartHeight = 1;
- 
-  float Height[BallCount];
-  float ImpactVelocityStart = sqrt( -2 * Gravity * StartHeight );
-  float ImpactVelocity[BallCount];
-  float TimeSinceLastBounce[BallCount];
-  int   Position[BallCount];
-  long  ClockTimeSinceLastBounce[BallCount];
-  float Dampening[BallCount];
- 
-  for (int i = 0 ; i < BallCount ; i++) {  
-    ClockTimeSinceLastBounce[i] = millis();
-    Height[i] = StartHeight;
-    Position[i] = 0;
-    ImpactVelocity[i] = ImpactVelocityStart;
-    TimeSinceLastBounce[i] = 0;
-    Dampening[i] = 0.90 - float(i)/pow(BallCount,2);
-  }
+    else {
+      //if is ;
+      if(message=="P"){
+        //P means pause -> using it to stop effects
+        FastLED.clear();
+        FastLED.show();
+        message = ""; reading=' ';
+      }
+      if(message=="RGB"){
+        message="";reading=' ';
+        Serial.println("Solid Color:");
+        int r, g,b, count=0;
 
-  while (true) {
-    for (int i = 0 ; i < BallCount ; i++) {
-      TimeSinceLastBounce[i] =  millis() - ClockTimeSinceLastBounce[i];
-      Height[i] = 0.5 * Gravity * pow( TimeSinceLastBounce[i]/1000 , 2.0 ) + ImpactVelocity[i] * TimeSinceLastBounce[i]/1000;
- 
-      if ( Height[i] < 0 ) {                      
-        Height[i] = 0;
-        ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
-        ClockTimeSinceLastBounce[i] = millis();
- 
-        if ( ImpactVelocity[i] < 0.01 ) {
-          ImpactVelocity[i] = ImpactVelocityStart;
+        //59 = ; in ASCII        
+        while(reading!=59 && count<3){
+          reading=Serial.read();
+          Serial.print("\nreading color: ");Serial.print(reading);
+          
+          if(reading!=44 && reading!=59){
+            //44 = ,
+            message+=reading;
+            Serial.print("\nmessage color:");Serial.print(message);
+          }
+          else{
+            if(count==0)r=message.toInt();
+            else if(count==1)g=message.toInt();
+            else b=message.toInt();
+
+            message="";
+            count++;
+          }
+        }//while reading colors
+
+        Serial.print("\n\nR: ");Serial.print(r);
+        Serial.print("\nG: ");Serial.print(g);
+        Serial.print("\nB: ");Serial.print(b);
+
+        FastLED.setBrightness(50);
+        fill_solid(leds,NUM_LEDS, CRGB(r,g,b));
+        FastLED.show();
+        FastLED.setBrightness(100);
+
+      }//if rgb
+
+      if(message=="EF"){
+        message = ""; reading= ' ';
+        int effect = 0;
+        int rE=10, gE = 10, bE=10, count=0;
+        CRGB color = CRGB(rE,gE,bE);
+
+        Serial.println("effects");
+        
+        //59 = ';' in ASCII
+        while(reading!=59){
+          reading=Serial.read();
+          Serial.print(reading);
+          if(reading!=59)message+=reading;
+        }
+
+        effect = message.toInt();
+
+        //verify if still has a color for the effect
+        if(Serial.available()>0){
+          message=""; reading=' ';
+          Serial.println("color 4 the effect");
+
+          //59 = ; in ASCII
+          while(reading!=59&&count<3){
+            reading = Serial.read();
+            Serial.print(reading);
+
+            //44 = ',' in ASCII
+            if(reading!=44&&reading!=59){
+              message+=reading;
+            }
+            else{
+              if(count==0) rE=message.toInt();
+              else if(count==1)gE= message.toInt();
+              else bE = message.toInt();
+
+              message=""; count++;
+            }
+          }
+
+          Serial.print("\n\nR: ");Serial.print(rE);
+          Serial.print("\nG: ");Serial.print(gE);
+          Serial.print("\nB: ");Serial.print(bE);
+
+          color = CRGB(rE, gE, bE);
+          
+        }
+
+        while(Serial.available()==0){
+          draw(effect, color);
         }
       }
-      Position[i] = round( Height[i] * (NUM_LEDS - 1) / StartHeight);
+
+      message="";reading=' ';
+      
     }
- 
-    for (int i = 0 ; i < BallCount ; i++) {
-      leds[Position[i]]=CRGB(red,green,blue);
-    }
-   
-    FastLED.show();
-    FastLED.clear();
-  }
+  }//Serial.available()>0
 }

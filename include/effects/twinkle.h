@@ -15,11 +15,19 @@ static const CRGB StarsColors[NUM_COLORS]={
     CRGB(255,99,71)
 };
 
-void DrawTwinkle()
+void drawTwinklePalette(int numberPalette){
+    CRGBPalette16 palette = choosePalette(numberPalette);
+    EVERY_N_MILLISECONDS(50){
+        leds[random16(0,NUM_LEDS-1)] = ColorFromPalette(palette,random8(),255,LINEARBLEND);
+    }
+    fadeToBlackBy(leds,NUM_LEDS,1);
+}
+
+void DrawSlowTwinkle()
 {
     
     fill_solid(leds, NUM_LEDS, CRGB(0, 0, 0));
-    FastLED.setBrightness(50);
+    // FastLED.setBrightness(50);
     for (int i = 0; i < NUM_LEDS / 5; i++)
     {
         CRGB currentColor = StarsColors[random(10)];

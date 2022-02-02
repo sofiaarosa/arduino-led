@@ -10,3 +10,7 @@
 #include "../include/effects/builting.h"
 #include "../include/effects/fade.h"
 #include "../include/effects/fire.h"
+#include "../include/effects/mirror.h"
+#include "../include/effects/pixels.h"
+#include "../include/effects/wavesandpalettes.h"
+#include "../include/effects/lightning.h"
